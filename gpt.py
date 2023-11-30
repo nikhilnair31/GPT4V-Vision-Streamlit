@@ -2,6 +2,7 @@ import openai
 import base64
 from PIL import Image
 import io
+import os
 
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
