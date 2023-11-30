@@ -1,4 +1,5 @@
-import openai
+
+from openai import OpenAI
 import base64
 from PIL import Image
 import io
