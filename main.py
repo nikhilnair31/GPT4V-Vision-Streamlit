@@ -10,7 +10,7 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png
 system_prompt = st.text_input("System prompt", "Please describe this image.")
 
 # Initialize GPT-4 interface with your API key
-gpt_interface = OpenAIGPT(openai_api_key='your_api_key_here')
+gpt_interface = OpenAIGPT(openai_api_key=OPENAI_API_KEY)
 
 if uploaded_file is not None:
     image_bytes = uploaded_file.getvalue()

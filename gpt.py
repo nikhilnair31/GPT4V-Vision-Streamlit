@@ -5,8 +5,8 @@ import io
 import os
 
 class OpenAIGPT:
-    def __init__(self, OPENAI_API_KEY):
-        openai.api_key = OPENAI_API_KEY
+    def __init__(self, openai_api_key):
+        openai.api_key = openai_api_key
         self.client = openai.Completion()
 
     def get_completion(self, system_prompt, image_path):
@@ -39,5 +39,5 @@ class OpenAIGPT:
         )
         return response.choices[0].message.content
 
-# Remember to replace 'your_api_key_here' with your actual OpenAI API key
-gpt_interface = OpenAIGPT(OPENAI_API_KEY=OPENAI_API_KEY)
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+gpt_interface = OpenAIGPT(openai_api_key=OPENAI_API_KEY)
