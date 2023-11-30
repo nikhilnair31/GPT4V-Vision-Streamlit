@@ -1,5 +1,8 @@
+import os
 import streamlit as st
 from gpt import OpenAIGPT  # this assumes your class is in a file named streamlit_openai_interface.py
+
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 
 st.title('Image Interpretation with GPT-4 Vision')
 

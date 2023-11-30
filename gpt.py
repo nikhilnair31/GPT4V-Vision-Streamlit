@@ -4,12 +4,10 @@ from PIL import Image
 import io
 import os
 
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-
 class OpenAIGPT:
     def __init__(self, OPENAI_API_KEY):
-        self.client = openai.Completion()
         openai.api_key = OPENAI_API_KEY
+        self.client = openai.Completion()
 
     def get_completion(self, system_prompt, image_path):
         with open(image_path, "rb") as image_file:
