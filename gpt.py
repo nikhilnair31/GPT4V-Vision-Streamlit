@@ -9,7 +9,7 @@ class OpenAIGPT:
     def __init__(self, openai_api_key):
         self.client = OpenAI(api_key=openai_api_key)
 
-    def get_completion(self, system_prompt, image_path):
+    def get_completion(self, system_prompt, image_file):
         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
         
         response = self.client.chat.completions.create(
