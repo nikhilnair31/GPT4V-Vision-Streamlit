@@ -37,6 +37,3 @@ class OpenAIGPT:
             max_tokens=max_tokens,
         )
         return response.choices[0].message.content
-
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-gpt_interface = OpenAIGPT(openai_api_key=OPENAI_API_KEY)

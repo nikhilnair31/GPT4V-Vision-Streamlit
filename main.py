@@ -1,23 +1,98 @@
-import os
 import streamlit as st
-from gpt import OpenAIGPT  # this assumes your class is in a file named streamlit_openai_interface.py
+from openai import OpenAI
+import base64
+from PIL import Image
+import io
 
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+st.title("Enhanced ChatGPT Clone with Image and Text Input")
 
-st.title('Image Interpretation with GPT-4 Vision')
+# Set OpenAI API key from Streamlit secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-system_prompt = st.text_input("System prompt", "Please describe this image.")
-max_tokens = st.slider("Max Length of Response (Max Tokens)", min_value=128, max_value=2048, value=512, step=1)
+# Set a default model for text and image prompts
+if "openai_model" not in st.session_state:
+    st.session_state["openai_model"] = "gpt-4-vision-preview"
 
-# Initialize GPT-4 interface with your API key
-gpt_interface = OpenAIGPT(openai_api_key=OPENAI_API_KEY)
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if uploaded_file is not None:
-    # Once we have an image, display it
-    st.image(uploaded_file, caption='Uploaded Image')
+# Helper function to get image content in base64
+def get_image_content_as_base64_str(image):
+    buffered = io.BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    if st.button('Interpret Image'):
-        with st.spinner(text='Interpreting the image...'):
-            response = gpt_interface.get_completion(system_prompt, uploaded_file, max_tokens)
-            st.text_area('Response', value=response, height=300)
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        if message["type"] == "text":
+            st.markdown(message["content"])
+        elif message["type"] == "image":
+            st.image(message["content"], caption='Uploaded Image', use_column_width=True)
+
+# Accept user text input
+user_input = st.text_input("Send a message or upload an image")
+# Handle file uploader for images
+uploaded_file = st.file_uploader("...or upload an image", type=["jpg", "jpeg", "png"], accept_multiple_files=False)
+
+# Send button click
+if st.button('Send'):
+    # Process image upload
+    if uploaded_file is not None:
+        st.session_state.messages.append({"role": "user", "type": "image", "content": uploaded_file})
+    # Add text input to chat history and display
+    if user_input:
+        st.session_state.messages.append({"role": "user", "type": "text", "content": user_input})
+
+    # If only text
+    if user_input and uploaded_file is None:
+        # Call OpenAI API with text input
+        response_text = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[{"role": "user", "content": user_input}]
+        )
+        # Display AI response for text
+        assistant_response_text = response_text.choices[0].message.content
+        st.session_state.messages.append({"role": "assistant", "type": "text", "content": assistant_response_text})
+    # If text + image
+    if user_input and uploaded_file is not None:
+        # Convert image to base64 for processing
+        image = Image.open(uploaded_file)
+        base64_image_str = get_image_content_as_base64_str(image)
+
+        # Call OpenAI API with image prompt
+        response_image = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image_str}",
+                                "detail": "low"
+                            },
+                        },
+                    ],
+                }
+            ],
+            max_tokens=1024,
+        )
+        # Display AI response for image
+        assistant_response_image = response_image.choices[0].message.content
+        st.session_state.messages.append({"role": "assistant", "type": "text", "content": assistant_response_image})
+    
+    # Clearing the input fields
+    user_input = ""
+    uploaded_file = None
+    st.text_input("Send a message or upload an image", value="", key="new")
+    st.file_uploader("...or upload an image", type=["jpg", "jpeg", "png"], accept_multiple_files=False, key="new2")
+
+    # Ensure that the UI updates with the latest messages
+    st.rerun()
+
+# Clear input fields after submission by rerunning the app
+if st.button('Clear'):
+    st.session_state.messages = []
